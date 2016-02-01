@@ -1,9 +1,12 @@
 # Turbolinks
 
-**Turbolinks makes navigating your web site faster.** In standard browser navigation every page is loaded anew. Resources are downloaded, JavaScript is evaluated, and CSS is processed. This takes time. But in most web applications these resources don't change between requests. So why spend time reloading them? Turbolinks speeds up navigation by persisting the current page and updating its contents in place, without reloading expensive resources. The result is dramatically improved load times.
+**Turbolinks makes navigating your web application faster.** In standard browser navigation every page is loaded anew. Resources are downloaded, JavaScript is evaluated, and CSS is processed. This takes time. But in most web applications these resources don't change between requests. So why spend time reloading them? Turbolinks speeds up navigation by persisting the current page and updating its contents in place, without reloading expensive resources. The result is dramatically improved load times.
+
+* graphic *
 
 ## Features
 
+- * good web citizen: works with back, reload automatically *
 - Optimizes navigation automatically. No need to annotate links or specify which parts of the page should change.
 - No server-side cooperation neccessary. Respond with full HTML pages, not fragments.
 - Instant navigation with caching. Recently-visited pages are redisplayed immediately and updated when a fresh response arrives.
@@ -15,18 +18,11 @@ Turbolinks supports all modern desktop and mobile browsers. It relies on the [HT
 
 # Installation
 
-Turbolinks is currently packaged for use via the Rails Asset Pipeline. Typical installation is via Bundler:
+* rewrite *
 
-1. Add `gem 'turbolinks', github: 'basecamp/turbolinks', branch: 'v5'` to your Gemfile.
-2. Run `bundle install`.
-3. Require `turbolinks` in your application's JavaScript manifest.
-4. Restart your server.
+# Concepts
 
-Note: this is expected to change. We intend to release the core of Turbolinks as a pure JavaScript library with no dependencies. Rails integration will be shipped as a separate library, `turbolinks-rails`.
-
-# How it works
-
-Turbolinks works by listening for clicks on `<a>` elements referencing a location on the current origin. When an eligible link is clicked, Turbolinks requests its location via XHR, loads the response, and updates the `head` and `body` of the current page without replacing the `document`. Critically, external `script`, `style`, and `link` elements are considiered *permanent* and are not replaced.
+Turbolinks works by listening for clicks on `<a>` elements referencing a location on the current origin. When an eligible link is clicked, Turbolinks requests its location via XHR, loads the response, and updates the `head` and `body` of the current page without replacing the `document`. Critically, external `script`, `style`, and `link` elements are considered *permanent* and are not replaced.
 
 Turbolinks is designed to emulate standard browser behavior as closely as possible: location, history, page title, and scroll position behave exactly as you'd expect.
 
@@ -34,23 +30,41 @@ Turbolinks is designed to emulate standard browser behavior as closely as possib
 
 Internally, Turbolinks models navigation as a *visit* to a *location* with an *action*. Actions are named for the effect they have on history.
 
+* introduce graphics, split into three paragraphs, include forward button *
+
 New navigation (e.g. clicking a link) has an action of either *advance* or *replace* and creates or updates a history entry respectively. In both cases Turbolinks will request the given location over the network. If available, a cached version will be shown immediately and updated when the response arrives.
 
 History navigation (e.g. clicking the "back" button) has an action of *restore* and returns to a previous history entry. If available, a cached version of the restored location will be shown immediately and *no* network request will be made to refresh it. Otherwise a request will be performed. In either case, scroll position will be restored.
 
-### Specifying an Action
+## Previews and Caching
 
-The default action when clicking a link is *advance*. To specify that *replace* be used instead, annotate link elements with `data-turbolinks-action=replace`.
+Turbolinks caches the 10 most-recently-visited pages in memory for instant display on the next visit. The current page is saved to the cache just prior to it being replaced, ensuring that changes made to the DOM after the initial load will be reflected.
+
+* document cloning *
+
+Observe the `turbolinks:before-cache` event if you need to make changes or clean up any state before the page is saved.
+
+You can clear the page cache at any time by calling `Turbolinks.clearCache()`.
+
+## Lifecycle of a Visit
+
+* timeline graphic *
+
+# Basic Usage
+
+## Specifying Navigation Actions
+
+The default action when clicking a link is `advance`. To specify that `replace` be used instead, annotate link elements with `data-turbolinks-action=replace`.
 
 ```html
 <a href="/" data-turbolinks-action=replace>Home</a>
 ```
 
-Restores are reserved for internal use during history navigation.
+The `restore` action is reserved for internal use during history navigation.
 
 ## Navigating Programmatically
 
-To navigate programatically call `Turbolinks.visit` with a *location* and an optional *action*. The action can be either "advance" or "replace". The default action is "advance".
+To navigate programatically call `Turbolinks.visit` with a *location* and an optional *action*. The action can be either `advance` or `replace`. The default action is `advance`.
 
 ```javascript
 // Visit this location and push a new history entry
@@ -75,14 +89,6 @@ Turbolinks emits events that allow you to track the navigation lifecycle and res
 - `turbolinks:render` fires after rendering the page. Fires twice when advancing to a cached location: once after rendering the cached version and again after rendering the fresh version.
 - `turbolinks:load` fires after the page is fully loaded.
 
-## Page Caching
-
-Turbolinks caches the 10 most-recently-visited pages in memory for instant display on the next visit. The current page is saved to the cache just prior to it being replaced, ensuring that changes made to the DOM after the initial load will be reflected.
-
-Observe the `turbolinks:before-cache` event if you need to make changes or clean up any state before the page is saved.
-
-You can clear the page cache at any time by calling `Turbolinks.clearCache()`.
-
 ## Displaying Progress
 
 Because Turbolinks navigation proceeds without a full load, the browser's native progress indicator won't be activated. Turbolinks ships with a JavaScript and CSS-based progress bar to compensate.
@@ -97,6 +103,8 @@ The progress bar is implemented as a `<div>` element with the class name `.turbo
 ```
 
 ## Reloading When Assets Change
+
+* explain why *
 
 Turbolinks can track asset URLs and reload automatically when they change. Ensure you can invalidate assets by URL (a common practise is to include a digest of the asset in its name) and denote tracked assets with `data-turbolinks-track=reload`.
 
@@ -123,6 +131,16 @@ Turbolinks is automatically enabled for internal links to HTML documents on the 
 ```
 ---
 
+# Building Your Turbolinks Application
+
+## Observing Page Loads
+
+## Handling Dynamic Updates
+
+## Previews, Caching, and Clone Safety
+
+## Following Redirects
+
 # Advanced Usage
 
 ## Permanent Elements
@@ -135,7 +153,6 @@ Turbolinks is automatically enabled for internal links to HTML documents on the 
 
 # Known Issues
 
-- Missing a polyfill for `Promise`.
 - Anchored links to the current location deviate from standard browser behavior by making a network request.
 - Snapshot#hasAnchor() doesn't consider named anchors like `<a name="top"></a>`.
 - Visiting with an unrecognized action triggers an error when history is changed. We should fail sooner when an invalid action is specified.
